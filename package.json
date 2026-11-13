@@ -12,7 +12,7 @@
     "i18n:audit": "node scripts/i18n-audit.mjs"
   },
   "dependencies": {
-    "hono": "^4.13.11",
+    "hono": "^4.13.16",
     "htmlparser2": "12.0.0",
     "sanitize-html": "^2.18.1"
   },
