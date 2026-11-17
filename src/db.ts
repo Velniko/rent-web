@@ -445,22 +445,16 @@ export async function listPublicNotices(env: Env, limit = 20): Promise<PublicNot
     try {
       result = await env.RENT.prepare(
         `SELECT MIN(id) AS id, type, title, message, ${englishColumns}, created_at,
-                MIN(CASE
-                      WHEN expires_at IS NULL OR expires_at > CASE WHEN type IN ('agreement_update', 'policy_update', 'legal_update')
-                                                                    THEN datetime(created_at, '+${PUBLIC_AGREEMENT_UPDATE_DAYS} days')
-                                                                    ELSE datetime(created_at, '+${PUBLIC_ANNOUNCEMENT_DAYS} days') END
-                        THEN CASE WHEN type IN ('agreement_update', 'policy_update', 'legal_update')
-                                  THEN datetime(created_at, '+${PUBLIC_AGREEMENT_UPDATE_DAYS} days')
-                                  ELSE datetime(created_at, '+${PUBLIC_ANNOUNCEMENT_DAYS} days') END
-                        ELSE expires_at
-                    END) AS expires_at
+                MIN(CASE WHEN type IN ('agreement_update', 'policy_update', 'legal_update')
+                         THEN datetime(created_at, '+${PUBLIC_AGREEMENT_UPDATE_DAYS} days')
+                         ELSE COALESCE(expires_at, datetime(created_at, '+${PUBLIC_ANNOUNCEMENT_DAYS} days')) END) AS expires_at
          FROM notifications
          WHERE ((type = 'announcement' AND sender_id IS NOT NULL)
                 OR type IN ('agreement_update', 'policy_update', 'legal_update'))
            AND deleted_at IS NULL
-           AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
-           AND ((type IN ('agreement_update', 'policy_update', 'legal_update') AND datetime(created_at, '+${PUBLIC_AGREEMENT_UPDATE_DAYS} days') > CURRENT_TIMESTAMP)
-                OR (type = 'announcement' AND datetime(created_at, '+${PUBLIC_ANNOUNCEMENT_DAYS} days') > CURRENT_TIMESTAMP))
+           AND (CASE WHEN type IN ('agreement_update', 'policy_update', 'legal_update')
+                     THEN datetime(created_at, '+${PUBLIC_AGREEMENT_UPDATE_DAYS} days')
+                     ELSE COALESCE(expires_at, datetime(created_at, '+${PUBLIC_ANNOUNCEMENT_DAYS} days')) END > CURRENT_TIMESTAMP)
          GROUP BY type, title, message, title_en, message_en, created_at
          ORDER BY created_at DESC
          LIMIT ?`,
