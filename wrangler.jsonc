@@ -40,6 +40,22 @@
 		// Square Dashboard 中发布的 eGift Card order site；官网入口会复用该页面的购买、查余额和 Reload card 功能。
 		"SQUARE_GIFT_CARD_URL": "https://app.squareup.com/gift/MLP6ZYA585ZQT/order",
 		// Stripe 收款统一读取 rent 后台加密保存的平台账户配置。
+	},
+	// Cloudflare Workers Builds 会给每个 PR 跑 `wrangler preview`，缺这个 block 会直接报错退出。
+	// 本项目只读复用 rent 的生产 D1（见上方注释），预览环境沿用相同的变量和数据库即可。
+	"previews": {
+		"vars": {
+			"APP_URL": "https://dashboard.geekslope.de5.net",
+			"MONTHLY_MULTIPLIER": "20",
+			"TURNSTILE_SITE_KEY": "",
+			"SQUARE_GIFT_CARD_URL": "https://app.squareup.com/gift/MLP6ZYA585ZQT/order"
+		},
+		"d1_databases": [
+			{
+				"binding": "RENT",
+				"database_id": "65a5ded3-ffd8-4627-8ea4-9d8ced480b93"
+			}
+		]
 	}
 	// 可选覆盖项（用 `wrangler secret put` 或在此加 vars）：
 	//   CONTACT_PHONE / CONTACT_EMAIL —— 覆盖 systemSettings.companyDetails 里的联系方式
