@@ -20,7 +20,7 @@ for (const hasExpiry of [true, false]) test(`admin announcements retain the seve
   if (hasExpiry) db.exec(`INSERT INTO notifications (id, type, title, message, created_at, sender_id, expires_at) VALUES
     ('expired', 'announcement', 'Expired', 'Past expiry', CURRENT_TIMESTAMP, 'admin', datetime('now', '-1 hour')),
     ('future', 'announcement', 'Future expiry', 'Still active', datetime('now', '-2 days'), 'admin', datetime('now', '+1 day')),
-    ('old-future', 'announcement', 'Old with future expiry', 'Seven day limit still applies', datetime('now', '-30 days'), 'admin', datetime('now', '+1 day')),
+    ('old-future', 'announcement', 'Old with future expiry', 'An explicit admin offline time overrides the seven-day default', datetime('now', '-30 days'), 'admin', datetime('now', '+1 day')),
     ('private', 'announcement', 'Private', 'Customer message', CURRENT_TIMESTAMP, NULL, NULL);`)
   const env = { RENT: { prepare(sql) {
     let params = []
@@ -29,10 +29,13 @@ for (const hasExpiry of [true, false]) test(`admin announcements retain the seve
   } } }
   const notices = await listPublicNotices(env)
   assert.deepEqual(notices.map(notice => notice.id).sort(), (hasExpiry
-    ? ['announcement:future', 'announcement:new']
+    ? ['announcement:future', 'announcement:new', 'announcement:old-future']
     : ['announcement:new']).sort())
   assert.ok(notices.find(notice => notice.id === 'announcement:new').expiresAt)
-  if (hasExpiry) assert.ok(notices.find(notice => notice.id === 'announcement:future').expiresAt)
+  if (hasExpiry) {
+    assert.ok(notices.find(notice => notice.id === 'announcement:future').expiresAt)
+    assert.ok(notices.find(notice => notice.id === 'announcement:old-future').expiresAt)
+  }
 })
 
 test('website ads read only published, unexpired bilingual content and sanitize the separate reader', async t => {
