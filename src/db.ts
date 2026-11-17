@@ -320,8 +320,10 @@ export async function getDeviceAvailability(
         if (!row.startDate || !row.endDate) { availability.unavailable = true; continue }
         let date = shiftDate(String(row.startDate ?? '').slice(0, 10), -Math.max(0, Math.floor(bufferDays)))
         const endDate = shiftDate(String(row.endDate ?? '').slice(0, 10), Math.max(0, Math.floor(bufferDays)))
-        const startPeriod = bufferDays ? 'AM' : (String(row.startPeriod || 'AM') === 'PM' ? 'PM' : 'AM')
-        const endPeriod = bufferDays ? 'PM' : (String(row.endPeriod || 'AM') === 'PM' ? 'PM' : 'AM')
+        // 缓冲日只占半天：提前占用的那天只挡下午（PM），顺延占用的那天只挡上午（AM），
+        // 不然缓冲期会把整天都锁住，比实际需要的准备时间长一倍。
+        const startPeriod = bufferDays ? 'PM' : (String(row.startPeriod || 'AM') === 'PM' ? 'PM' : 'AM')
+        const endPeriod = bufferDays ? 'AM' : (String(row.endPeriod || 'AM') === 'PM' ? 'PM' : 'AM')
         const startIndex = Date.parse(`${date}T00:00:00Z`) / 86400000 * 2 + (startPeriod === 'PM' ? 1 : 0)
         const endIndex = Date.parse(`${endDate}T00:00:00Z`) / 86400000 * 2 + (endPeriod === 'PM' ? 1 : 0)
         for (let index = startIndex; index <= endIndex; index += 1) {

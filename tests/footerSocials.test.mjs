@@ -24,12 +24,12 @@ test('company social configuration reaches footer profile links and QR panels', 
   assert.equal((html.match(/<details class="foot-social-qr"/g) || []).length, 2)
 })
 
-test('WeChat uses the bundled QR while other unconfigured platforms show icons', async () => {
+test('WeChat uses the bundled QR while other unconfigured platforms are hidden', async () => {
   const html = renderSiteFooter(await getSiteContact(envFor({})))
   assert.match(html, /<summary class="foot-social-icon" aria-label="微信" title="微信"/)
   assert.match(html, /src="\/images\/wechat-qr.jpg" alt="微信二维码"/)
-  assert.match(html, /aria-label="小红书" title="小红书" role="img"/)
-  assert.match(html, /aria-label="抖音" title="抖音" role="img"/)
+  assert.doesNotMatch(html, /aria-label="小红书"/)
+  assert.doesNotMatch(html, /aria-label="抖音"/)
   assert.equal((html.match(/<details class="foot-social-qr"/g) || []).length, 1)
   assert.doesNotMatch(html, /href="#"/)
 })
